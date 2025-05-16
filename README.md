@@ -74,7 +74,7 @@ Ensure you have the following installed on your machine:
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/salemshah/sparring-rest-full-api.git
+   git clone https://github.com/salemshah/workshop-mds-saparring-finder.git
    cd sparring-rest-full-api
 
 
