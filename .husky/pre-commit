@@ -2,6 +2,8 @@
 
 const { execSync } = require('child_process');
 
+// will run before create commit
+// update it
 try {
   console.log('Running lint-staged...');
   execSync('npx lint-staged', { stdio: 'inherit' });
