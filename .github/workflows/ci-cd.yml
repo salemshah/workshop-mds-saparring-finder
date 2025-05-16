@@ -1,191 +1,191 @@
-name: CI/CD Pipeline
-
-env:
-  SERVER_DIR: "/root/minda-rest-full-api"
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db?schema=public
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          for i in {1..30}; do
-            if pg_isready -h localhost -p 5432; then
-              echo "PostgreSQL is ready"
-              break
-            else
-              echo "Waiting for PostgreSQL..."
-              sleep 1
-            fi
-          done
-
-      - name: Set up Prisma
-        run: |
-          if npm run prisma:generate; then
-            echo "Prisma client generated successfully."
-          else
-            echo "Failed to generate Prisma client."
-            exit 1
-          fi
-
-      - name: Run Prisma migrations
-        run: |
-          if npm run prisma:migrate:deploy; then
-            echo "Prisma migrations deployed successfully."
-          else
-            echo "Failed to deploy Prisma migrations."
-            exit 1
-          fi
-
-      - name: Validate Prisma Schema
-        run: |
-          if npx prisma validate; then
-            echo "Prisma schema is valid."
-          else
-            echo "Prisma schema validation failed."
-            exit 1
-          fi
-
-      - name: Check Prisma Database Connection
-        run: |
-          if npx prisma db pull; then
-            echo "Prisma successfully connected to PostgreSQL."
-          else
-            echo "Failed to connect Prisma to PostgreSQL."
-            exit 1
-          fi
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-
-      - name: Run Linting
-        run: npm run lint:ci
-
-      - name: Run commitlint
-        run: npx commitlint --from=origin/main --to=HEAD
-
-      - name: Run tests
-        run: npm run test:ci
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: docker/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/minda-rest-full-api:latest
-
-      # Start the ssh-agent and add the private key
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
-
-      # Create .env.prod on Server
-      - name: Create .env on Server
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}"
-          echo "${{ vars.ENV_PROD_FILE }}" | tr -d '\r' | ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cat > ${{ env.SERVER_DIR }}/.env"
-      
-
-      # Copy docker-compose.prod.yml to Server
-      - name: Copy docker-compose.prod.yml to Server
-        run: |
-          scp -o StrictHostKeyChecking=no docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/docker-compose.prod.yml
-
-
-      # Copy Nginx Config to VPS
-      - name: Copy Nginx Config to VPS
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}/nginx/conf.d"
-          scp -o StrictHostKeyChecking=no nginx/conf.d/default.conf ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/nginx/conf.d/default.conf
-     
-
-      # Enable Nginx Config on VPS
-      - name: Enable Nginx Config
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-          sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-          sudo cp ${{ env.SERVER_DIR }}/nginx/conf.d/default.conf /etc/nginx/sites-available/minda-app.com
-               
-          # Remove existing symbolic link if it exists
-          sudo rm -f /etc/nginx/sites-enabled/minda-app.store
-          
-          # Create symbolic link to enable the site
-          sudo ln -sf /etc/nginx/sites-available/minda-app.store /etc/nginx/sites-enabled/
-
-          # Test Nginx configuration
-          sudo nginx -t && sudo systemctl reload nginx
-          EOF
-
-
-      - name: Deploy Containers
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-          cd ${{ env.SERVER_DIR }}
-          
-          # Stop and remove old containers 
-          docker compose --env-file .env -f docker-compose.prod.yml down
-          
-          # Pull the latest image
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/minda-rest-full-api:latest
-          
-          # Start the containers
-          docker compose --env-file .env -f docker-compose.prod.yml up -d
-          
-          # Clean up unused Docker images
-          docker image prune -f
-          EOF
-
-
+#name: CI/CD Pipeline
+#
+#env:
+#  SERVER_DIR: "/root/minda-rest-full-api"
+#
+#on:
+#  push:
+#    branches: [ main ]
+#
+#jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      postgres:
+#        image: postgres:15-alpine
+#        env:
+#          POSTGRES_USER: postgres
+#          POSTGRES_PASSWORD: postgres
+#          POSTGRES_DB: test_db
+#        ports:
+#          - 5432:5432
+#        options: >-
+#          --health-cmd="pg_isready -U postgres"
+#          --health-interval=10s
+#          --health-timeout=5s
+#          --health-retries=5
+#
+#    env:
+#      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db?schema=public
+#
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: '20'
+#          cache: 'npm'
+#
+#      - name: Install dependencies
+#        run: npm ci
+#
+#      - name: Wait for PostgreSQL to be ready
+#        run: |
+#          for i in {1..30}; do
+#            if pg_isready -h localhost -p 5432; then
+#              echo "PostgreSQL is ready"
+#              break
+#            else
+#              echo "Waiting for PostgreSQL..."
+#              sleep 1
+#            fi
+#          done
+#
+#      - name: Set up Prisma
+#        run: |
+#          if npm run prisma:generate; then
+#            echo "Prisma client generated successfully."
+#          else
+#            echo "Failed to generate Prisma client."
+#            exit 1
+#          fi
+#
+#      - name: Run Prisma migrations
+#        run: |
+#          if npm run prisma:migrate:deploy; then
+#            echo "Prisma migrations deployed successfully."
+#          else
+#            echo "Failed to deploy Prisma migrations."
+#            exit 1
+#          fi
+#
+#      - name: Validate Prisma Schema
+#        run: |
+#          if npx prisma validate; then
+#            echo "Prisma schema is valid."
+#          else
+#            echo "Prisma schema validation failed."
+#            exit 1
+#          fi
+#
+#      - name: Check Prisma Database Connection
+#        run: |
+#          if npx prisma db pull; then
+#            echo "Prisma successfully connected to PostgreSQL."
+#          else
+#            echo "Failed to connect Prisma to PostgreSQL."
+#            exit 1
+#          fi
+#        env:
+#          DATABASE_URL: ${{ env.DATABASE_URL }}
+#
+#      - name: Run Linting
+#        run: npm run lint:ci
+#
+#      - name: Run commitlint
+#        run: npx commitlint --from=origin/main --to=HEAD
+#
+#      - name: Run tests
+#        run: npm run test:ci
+#        env:
+#          DATABASE_URL: ${{ env.DATABASE_URL }}
+#
+#
+#  deploy:
+#    needs: build
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Log in to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+#
+#      - name: Build and push Docker image
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: .
+#          file: docker/Dockerfile
+#          push: true
+#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/minda-rest-full-api:latest
+#
+#      # Start the ssh-agent and add the private key
+#      - name: Start ssh-agent
+#        uses: webfactory/ssh-agent@v0.5.4
+#        with:
+#          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+#
+#      # Create .env.prod on Server
+#      - name: Create .env on Server
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}"
+#          echo "${{ vars.ENV_PROD_FILE }}" | tr -d '\r' | ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cat > ${{ env.SERVER_DIR }}/.env"
+#
+#
+#      # Copy docker-compose.prod.yml to Server
+#      - name: Copy docker-compose.prod.yml to Server
+#        run: |
+#          scp -o StrictHostKeyChecking=no docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/docker-compose.prod.yml
+#
+#
+#      # Copy Nginx Config to VPS
+#      - name: Copy Nginx Config to VPS
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}/nginx/conf.d"
+#          scp -o StrictHostKeyChecking=no nginx/conf.d/default.conf ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/nginx/conf.d/default.conf
+#
+#
+#      # Enable Nginx Config on VPS
+#      - name: Enable Nginx Config
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+#          sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+#          sudo cp ${{ env.SERVER_DIR }}/nginx/conf.d/default.conf /etc/nginx/sites-available/minda-app.com
+#
+#          # Remove existing symbolic link if it exists
+#          sudo rm -f /etc/nginx/sites-enabled/minda-app.store
+#
+#          # Create symbolic link to enable the site
+#          sudo ln -sf /etc/nginx/sites-available/minda-app.store /etc/nginx/sites-enabled/
+#
+#          # Test Nginx configuration
+#          sudo nginx -t && sudo systemctl reload nginx
+#          EOF
+#
+#
+#      - name: Deploy Containers
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+#          cd ${{ env.SERVER_DIR }}
+#
+#          # Stop and remove old containers
+#          docker compose --env-file .env -f docker-compose.prod.yml down
+#
+#          # Pull the latest image
+#          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/minda-rest-full-api:latest
+#
+#          # Start the containers
+#          docker compose --env-file .env -f docker-compose.prod.yml up -d
+#
+#          # Clean up unused Docker images
+#          docker image prune -f
+#          EOF
+#
+#
