@@ -1,0 +1,51 @@
+In vps connect to database:
+docker exec -it minda-rest-full-api-db-1 psql -U postgres
+
+Show database:
+\l
+
+Show all table:
+\dt
+
+
+To remove all containers and images from Docker, follow these steps:
+
+🛑 Warning: This will remove all running and stopped containers, as well as all images from your system. Be sure you want to do this before proceeding.
+
+1️⃣ Stop all running containers (optional)
+If you have running containers, stop them first:
+=====> docker stop $(docker ps -q)
+
+
+2️⃣ Remove all containers
+Remove both running and stopped containers:
+=====> docker rm $(docker ps -aq)
+
+If you encounter errors, use the force flag:
+=====> docker rm -f $(docker ps -aq)
+3️⃣ Remove all images
+
+
+Now, delete all images:
+====> docker rmi $(docker images -q)
+
+
+If some images fail to delete due to dependencies, force remove them:
+====> docker rmi -f $(docker images -q)
+
+4️⃣ Remove all unused volumes (optional)
+If you want to remove all Docker volumes as well:
+===> docker volume prune -f
+
+5️⃣ Remove all Docker networks (optional)
+To clean up unused networks:
+====> docker network prune -f
+
+
+6️⃣ Remove everything in one command
+If you want to completely clean Docker, removing all containers, images, volumes, and networks:
+====> docker system prune -a --volumes -f
+
+
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up -d

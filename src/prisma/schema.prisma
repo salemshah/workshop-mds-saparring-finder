@@ -1,0 +1,139 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
+}
+
+model User {
+  id                          Int       @id @default(autoincrement())
+  email                       String    @unique
+  password_hash               String
+  role                        String
+  is_verified                 Boolean
+  is_active                   Boolean
+  last_login_at               DateTime?
+  auth_provider               String
+  created_at                  DateTime  @default(now())
+  updated_at                  DateTime  @updatedAt
+  verification_code           String?
+  verification_code_expires   DateTime?
+  reset_password_code         String?
+  reset_password_code_expires DateTime?
+
+  profile              Profile?
+  availability         Availability[]
+  sparringsAsRequester Sparring[]     @relation("Requester")
+  sparringsAsPartner   Sparring[]     @relation("Partner")
+  sparringsCancelled   Sparring[]     @relation("CancelledBy")
+  messagesSent         Message[]      @relation("MessagesSent")
+  messagesReceived     Message[]      @relation("MessagesReceived")
+  notifications        Notification[]
+  favorites            Favorite[]     @relation("FavoritesFrom")
+  favoritedBy          Favorite[]     @relation("FavoritesTo")
+  Sparring             Sparring[]
+}
+
+model Profile {
+  id               Int      @id @default(autoincrement())
+  user_id          Int      @unique
+  first_name       String
+  last_name        String
+  photo_url        String
+  date_of_birth    DateTime
+  gender           String
+  weight_class     String
+  skill_level      String
+  years_experience Int
+  preferred_styles String
+  gym_name         String
+  city             String
+  country          String
+  verified         Boolean
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Availability {
+  id            Int      @id @default(autoincrement())
+  user_id       Int
+  specific_date DateTime
+  start_time    DateTime
+  end_time      DateTime
+  location      String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Sparring {
+  id                   Int       @id @default(autoincrement())
+  requester_id         Int
+  partner_id           Int
+  scheduled_date       DateTime
+  start_time           DateTime
+  end_time             DateTime
+  location             String
+  status               String
+  notes                String
+  confirmed_at         DateTime?
+  cancelled_by_user_id Int?
+  cancellation_reason  String?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  requester         User  @relation("Requester", fields: [requester_id], references: [id])
+  partner           User  @relation("Partner", fields: [partner_id], references: [id])
+  cancelled_by_user User? @relation("CancelledBy", fields: [cancelled_by_user_id], references: [id])
+
+  User User[]
+}
+
+model Message {
+  id                  Int       @id @default(autoincrement())
+  sender_id           Int
+  receiver_id         Int
+  content             String
+  message_type        String
+  media_url           String?
+  is_read             Boolean
+  sent_at             DateTime  @default(now())
+  read_at             DateTime?
+  deleted_by_sender   Boolean
+  deleted_by_receiver Boolean
+
+  sender   User @relation("MessagesSent", fields: [sender_id], references: [id])
+  receiver User @relation("MessagesReceived", fields: [receiver_id], references: [id])
+}
+
+model Notification {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  type       String
+  title      String
+  body       String
+  is_read    Boolean
+  via        String
+  sent_at    DateTime  @default(now())
+  read_at    DateTime?
+  action_url String?
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Favorite {
+  id                Int      @id @default(autoincrement())
+  user_id           Int
+  favorited_user_id Int
+  note              String?
+  created_at        DateTime @default(now())
+
+  user           User @relation("FavoritesFrom", fields: [user_id], references: [id])
+  favorited_user User @relation("FavoritesTo", fields: [favorited_user_id], references: [id])
+}
