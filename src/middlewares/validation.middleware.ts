@@ -6,11 +6,15 @@ export const validate = (schema: ZodSchema): RequestHandler => {
     const parseResult = schema.safeParse(req.body);
 
     if (!parseResult.success) {
-      const errors = parseResult.error.errors.map((err) => err.message);
+      const errors = parseResult.error.errors.map((err) => ({
+        field: err.path.join('.'),
+        message: err.message,
+      }));
+
       return res.status(400).json({ errors });
     }
-    req.body = parseResult.data;
 
+    req.body = parseResult.data;
     next();
   };
 };

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Service } from 'typedi';
 import { UserService } from '../services/user.service';
 import { asyncWrapper } from '../utils/asyncWrapper';
+import { setTokenCookie } from '../utils/setCookie';
 
 @Service()
 export class UserController {
@@ -26,6 +27,7 @@ export class UserController {
   login = asyncWrapper(async (req: Request, res: Response) => {
     const { email, password } = req.body;
     const result = await this.userService.loginUser(email, password);
+    setTokenCookie(res, result.accessToken);
     res.status(200).json(result);
   });
 

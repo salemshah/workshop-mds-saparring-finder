@@ -3,7 +3,7 @@ import { verifyAccessToken } from '../utils/jwt';
 import { User } from '@prisma/client';
 import logger from '../utils/logger';
 
-export const userAuthMiddleware = (
+export const isAuthenticated = (
   req: Request,
   res: Response,
   next: NextFunction

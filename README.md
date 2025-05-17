@@ -75,7 +75,7 @@ Ensure you have the following installed on your machine:
 
    ```bash
    git clone https://github.com/salemshah/workshop-mds-saparring-finder.git
-   cd sparring-rest-full-api
+   cd workshop-mds-saparring-finder
 
 
 ## Main Endpoints

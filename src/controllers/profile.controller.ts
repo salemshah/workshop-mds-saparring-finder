@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Service } from 'typedi';
 import { ProfileService } from '../services/profile.service';
 import { asyncWrapper } from '../utils/asyncWrapper';
+import { uploadImageToCloudinary } from '../utils/cloudinary';
 
 @Service()
 export class ProfileController {
@@ -9,7 +10,7 @@ export class ProfileController {
 
   /**
    * Retrieves the profile of the authenticated user.
-   * @route GET /user/profile
+   * @route GET /profile
    * @access Private
    */
   getProfile = asyncWrapper(async (req: Request, res: Response) => {
@@ -20,19 +21,29 @@ export class ProfileController {
 
   /**
    * Creates a profile for the authenticated user.
-   * @route POST /user/profile
+   * @route POST /profile
    * @access Private
    */
   createProfile = asyncWrapper(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const profileData = req.body;
-    const profile = await this.profileService.createProfile(userId, profileData);
+
+    // Handle image upload if file is present
+    if (req.file?.buffer) {
+      const photoUrl = await uploadImageToCloudinary(req.file.buffer);
+      profileData.photo_url = photoUrl;
+    }
+
+    const profile = await this.profileService.createProfile(
+      userId,
+      profileData
+    );
     res.status(201).json({ message: 'Profile created successfully', profile });
   });
 
   /**
    * Updates the profile of the authenticated user.
-   * @route PUT /user/profile
+   * @route PUT /profile
    * @access Private
    */
   updateProfile = asyncWrapper(async (req: Request, res: Response) => {
@@ -44,7 +55,7 @@ export class ProfileController {
 
   /**
    * Deletes the profile of the authenticated user.
-   * @route DELETE /user/profile
+   * @route DELETE /profile
    * @access Private
    */
   deleteProfile = asyncWrapper(async (req: Request, res: Response) => {
@@ -54,9 +65,9 @@ export class ProfileController {
   });
 
   /**
-   * Lists all profiles (admin usage).
-   * @route GET /admin/profiles
-   * @access Admin
+   * Lists all profiles the authenticated user.
+   * @route GET /profile/all
+   * @access private
    */
   listProfiles = asyncWrapper(async (_req: Request, res: Response) => {
     const profiles = await this.profileService.listProfiles();
@@ -64,16 +75,38 @@ export class ProfileController {
   });
 
   /**
-   * Retrieves a profile by its ID.
-   * @route GET /admin/profiles/:id
-   * @access Admin
+   * Checks if the authenticated user has a profile.
+   * @route GET /profile/exists
+   * @access Private
    */
-  getProfileById = asyncWrapper(async (req: Request, res: Response) => {
-    const profileId = parseInt(req.params.id, 10);
-    const profile = await this.profileService.getProfileById(profileId);
-    if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+  hasProfile = asyncWrapper(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+
+    const exists = await this.profileService.hasProfile(userId);
+
+    res.status(200).json({ hasProfile: exists });
+  });
+
+  /**
+   * Updates the profile photo of the authenticated user.
+   * @route PATCH /profile/photo
+   * @access Private
+   */
+  updateProfilePhoto = asyncWrapper(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+
+    if (!req.file?.buffer) {
+      return res.status(400).json({ message: 'No image file uploaded' });
     }
-    res.status(200).json({ profile });
+
+    const photoUrl = await uploadImageToCloudinary(req.file.buffer);
+    const profile = await this.profileService.updateProfilePhoto(
+      userId,
+      photoUrl
+    );
+
+    res
+      .status(200)
+      .json({ message: 'Profile photo updated successfully', profile });
   });
 }

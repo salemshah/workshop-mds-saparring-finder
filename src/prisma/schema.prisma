@@ -41,18 +41,19 @@ model Profile {
   id               Int      @id @default(autoincrement())
   user_id          Int      @unique
   first_name       String
+  bio              String
   last_name        String
   photo_url        String
   date_of_birth    DateTime
   gender           String
   weight_class     String
   skill_level      String
-  years_experience Int
+  years_experience String
   preferred_styles String
   gym_name         String
   city             String
   country          String
-  verified         Boolean
+  verified         Boolean?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 

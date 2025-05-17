@@ -103,20 +103,26 @@ export class ProfileService {
     return !!profile;
   }
 
+  async updateProfilePhoto(userId: number, photoUrl: string): Promise<Profile> {
+    const profile = await prisma.profile.findUnique({
+      where: { user_id: userId },
+    });
+
+    if (!profile) {
+      throw new CustomError('Profile not found', 404, 'PROFILE_NOT_FOUND');
+    }
+
+    return prisma.profile.update({
+      where: { user_id: userId },
+      data: { photo_url: photoUrl },
+    });
+  }
+
   /**
    * Lists all profiles (for admin or dashboard usage).
    * @returns List of profiles.
    */
   async listProfiles(): Promise<Profile[]> {
     return prisma.profile.findMany({ orderBy: { created_at: 'desc' } });
-  }
-
-  /**
-   * Retrieves a profile by profile ID.
-   * @param id - Profile ID.
-   * @returns Profile or null.
-   */
-  async getProfileById(id: number): Promise<Profile | null> {
-    return prisma.profile.findUnique({ where: { id } });
   }
 }
