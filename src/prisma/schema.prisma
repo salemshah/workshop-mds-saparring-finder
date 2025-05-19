@@ -9,32 +9,31 @@ generator client {
 }
 
 model User {
-  id                          Int       @id @default(autoincrement())
-  email                       String    @unique
+  id                          Int            @id @default(autoincrement())
+  email                       String         @unique
   password_hash               String
   role                        String
   is_verified                 Boolean
   is_active                   Boolean
   last_login_at               DateTime?
   auth_provider               String
-  created_at                  DateTime  @default(now())
-  updated_at                  DateTime  @updatedAt
+  created_at                  DateTime       @default(now())
+  updated_at                  DateTime       @updatedAt
   verification_code           String?
   verification_code_expires   DateTime?
   reset_password_code         String?
   reset_password_code_expires DateTime?
-
-  profile              Profile?
-  availability         Availability[]
-  sparringsAsRequester Sparring[]     @relation("Requester")
-  sparringsAsPartner   Sparring[]     @relation("Partner")
-  sparringsCancelled   Sparring[]     @relation("CancelledBy")
-  messagesSent         Message[]      @relation("MessagesSent")
-  messagesReceived     Message[]      @relation("MessagesReceived")
-  notifications        Notification[]
-  favorites            Favorite[]     @relation("FavoritesFrom")
-  favoritedBy          Favorite[]     @relation("FavoritesTo")
-  Sparring             Sparring[]
+  profile                     Profile?
+  availability                Availability[]
+  sparringsAsRequester        Sparring[]     @relation("Requester")
+  sparringsAsPartner          Sparring[]     @relation("Partner")
+  sparringsCancelled          Sparring[]     @relation("CancelledBy")
+  messagesSent                Message[]      @relation("MessagesSent")
+  messagesReceived            Message[]      @relation("MessagesReceived")
+  notifications               Notification[]
+  favorites                   Favorite[]     @relation("FavoritesFrom")
+  favoritedBy                 Favorite[]     @relation("FavoritesTo")
+  Sparring                    Sparring[]
 }
 
 model Profile {
@@ -132,7 +131,6 @@ model Favorite {
   id                Int      @id @default(autoincrement())
   user_id           Int
   favorited_user_id Int
-  note              String?
   created_at        DateTime @default(now())
 
   user           User @relation("FavoritesFrom", fields: [user_id], references: [id])

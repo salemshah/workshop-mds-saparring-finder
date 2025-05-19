@@ -41,4 +41,8 @@ router.patch(
   profileController.updateProfilePhoto
 );
 
+router.get('/search', isAuthenticated, profileController.searchProfiles);
+
+router.get('/filter', isAuthenticated, profileController.filterProfiles);
+
 export default router;

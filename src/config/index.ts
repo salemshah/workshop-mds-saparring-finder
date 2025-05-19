@@ -13,7 +13,7 @@ const config = {
     refreshTokenSecret:
       process.env.REFRESH_TOKEN_SECRET || ('sparring_refresh_secret' as string),
     refreshTokenExpiresIn: '7d' as string,
-    accessTokenExpiresIn: '15m' as string,
+    accessTokenExpiresIn: '7d' as string,
   },
   smtp: {
     host: process.env.EMAIL_HOST || ('smtp-relay.brevo.com' as string),
@@ -22,7 +22,7 @@ const config = {
     user: process.env.EMAIL_USER || ('xyz@smtp-brevo.com' as string),
     password: process.env.EMAIL_PASS || ('xyz' as string),
     from: process.env.EMAIL_FROM || ('salem@gmail.com' as string),
-  }
+  },
 };
 
 export default config;
