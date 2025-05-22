@@ -4,7 +4,7 @@
 set -e
 
 #.env location
-source /root/minda-rest-full-api/.env
+source /root/sparring-finder-rest-full-api/.env
 
 # Backup settings
 DATE=$(date +%Y-%m-%d_%H-%M-%S)
