@@ -1,6 +1,6 @@
 services:
   app:
-    image: salemshah/minda-rest-full-api:latest
+    image: salemshah/sparring-finder-rest-full-api:latest
     restart: always
     command: sleep infinity
     env_file:

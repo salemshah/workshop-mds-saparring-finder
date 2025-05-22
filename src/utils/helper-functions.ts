@@ -12,7 +12,7 @@ function excludeField<T extends Record<string, unknown>, Key extends keyof T>(
 }
 
 function figletText(): void {
-  figlet('MINDA    REST    FULL   A P I', function (err, data) {
+  figlet('SPARRING    FINDER  A P I', function (err, data) {
     console.log(chalk.green(data));
   });
 }

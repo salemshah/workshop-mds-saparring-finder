@@ -1,5 +1,5 @@
 In vps connect to database:
-docker exec -it minda-rest-full-api-db-1 psql -U postgres
+docker exec -it sparring-finder-rest-full-api-db-1 psql -U postgres
 
 Show database:
 \l

@@ -8,7 +8,7 @@ export const promRegistry = new client.Registry();
 client.collectDefaultMetrics({
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  app: 'Minda',
+  app: 'Sparring finder',
   prefix: 'app_', // Optional prefix for all default metrics
   timeout: 5000, // Collect metrics every 5 seconds
   register: promRegistry,
