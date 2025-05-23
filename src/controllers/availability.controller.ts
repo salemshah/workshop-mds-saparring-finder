@@ -27,6 +27,16 @@ export class AvailabilityController {
   });
 
   // -------------------------------------------------------------------------
+  // GET /availability – get all availabilities of target user
+  // -------------------------------------------------------------------------
+  getAllTargetUserId = asyncWrapper(async (req: Request, res: Response) => {
+    const userId = Number(req.params.targetUserId);
+    const result: AvailabilitiesResponse =
+      await this.availabilityService.getAllAvailabilities(userId);
+    res.status(200).json(result);
+  });
+
+  // -------------------------------------------------------------------------
   // GET /availability/:id – get availability by ID
   // -------------------------------------------------------------------------
   getById = asyncWrapper(async (req: Request, res: Response) => {
@@ -57,6 +67,7 @@ export class AvailabilityController {
   update = asyncWrapper(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const id = Number(req.params.id);
+    if (isNaN(id)) throw new Error('Invalid ID');
 
     const result: AvailabilitiesResponse =
       await this.availabilityService.updateAvailability(id, userId, req.body);

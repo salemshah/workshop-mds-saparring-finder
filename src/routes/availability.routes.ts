@@ -14,6 +14,12 @@ const availabilityController = Container.get(AvailabilityController);
 // GET all for current user
 router.get('/', isAuthenticated, availabilityController.getAll);
 
+router.get(
+  '/all/:targetUserId',
+  isAuthenticated,
+  availabilityController.getAllTargetUserId
+);
+
 // GET by ID
 router.get('/:id', isAuthenticated, availabilityController.getById);
 

@@ -2,6 +2,7 @@ import { Service } from 'typedi';
 import prisma from '../prisma/client';
 import { Prisma, Availability } from '@prisma/client';
 import CustomError from '../utils/customError';
+import { DateTime } from 'luxon';
 
 export interface AvailabilitiesResponse {
   availabilities: Availability[];
@@ -21,9 +22,9 @@ export class AvailabilityService {
     await prisma.availability.create({
       data: {
         ...data,
-        specific_date: new Date(data.specific_date),
-        start_time: new Date(data.start_time),
-        end_time: new Date(data.end_time),
+        specific_date: this.parseUtc(data.specific_date),
+        start_time: this.parseUtc(data.start_time),
+        end_time: this.parseUtc(data.end_time),
         user: { connect: { id: userId } },
       },
     });
@@ -58,10 +59,14 @@ export class AvailabilityService {
       data: {
         ...data,
         ...(data.specific_date && {
-          specific_date: new Date(data.specific_date),
+          specific_date: this.parseUtc(data.specific_date),
         }),
-        ...(data.start_time && { start_time: new Date(data.start_time) }),
-        ...(data.end_time && { end_time: new Date(data.end_time) }),
+        ...(data.start_time && {
+          start_time: this.parseUtc(data.start_time),
+        }),
+        ...(data.end_time && {
+          end_time: this.parseUtc(data.end_time),
+        }),
       },
     });
 
@@ -96,11 +101,18 @@ export class AvailabilityService {
 
   /** --------------------------- Get all -------------------------------- */
   async getAllAvailabilities(userId: number): Promise<AvailabilitiesResponse> {
+    if (isNaN(userId)) throw new CustomError('Invalid ID', 400, 'INVALID_ID');
     const availabilities = await prisma.availability.findMany({
       where: { user_id: userId },
       orderBy: { specific_date: 'asc' },
     });
 
     return { availabilities };
+  }
+
+  /** ----------------------- Luxon Helper ------------------------------- */
+  private parseUtc(value: string | Date): Date {
+    if (value instanceof Date) return value;
+    return DateTime.fromISO(value, { zone: 'utc' }).toJSDate();
   }
 }

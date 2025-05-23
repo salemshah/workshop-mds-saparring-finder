@@ -76,6 +76,7 @@ model Sparring {
   id                   Int       @id @default(autoincrement())
   requester_id         Int
   partner_id           Int
+  availability_id      Int
   scheduled_date       DateTime
   start_time           DateTime
   end_time             DateTime
