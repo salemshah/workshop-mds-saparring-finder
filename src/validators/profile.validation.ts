@@ -1,8 +1,7 @@
 import { z } from 'zod';
 
-// Helper
-const isoDateString = z.string().refine((val) => !isNaN(Date.parse(val)), {
-  message: 'Invalid date format',
+const isoDateTime = z.string().refine((val) => !isNaN(Date.parse(val)), {
+  message: 'Invalid date-time format',
 });
 
 const genderEnum = z.enum(['Male', 'Female', 'Other']);
@@ -17,7 +16,7 @@ export const createProfileSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
   bio: z.string().optional(),
-  date_of_birth: isoDateString,
+  date_of_birth: isoDateTime,
   gender: genderEnum,
   weight_class: z.string().min(1, 'Weight class is required'),
   skill_level: skillLevelEnum,
@@ -33,7 +32,7 @@ export const createProfileSchema = z.object({
 export const updateProfileSchema = z.object({
   first_name: z.string().min(1).optional(),
   last_name: z.string().min(1).optional(),
-  date_of_birth: isoDateString.optional(),
+  date_of_birth: isoDateTime.optional(),
   gender: genderEnum.optional(),
   weight_class: z.string().min(1).optional(),
   skill_level: skillLevelEnum.optional(),

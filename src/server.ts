@@ -11,6 +11,7 @@ const PORT = config.server.port || 8000;
 
 async function startServer() {
   try {
+    // connect to db
     figletText();
     await prisma.$connect();
     const app = await initializeApp();
