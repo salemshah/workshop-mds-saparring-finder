@@ -8,6 +8,7 @@ import { figletText } from './utils/helper-functions';
 import { data } from './utils/logger';
 
 const PORT = config.server.port || 8000;
+const HOST_NAME = config.server.hostname || 'localhost';
 
 async function startServer() {
   try {
@@ -16,7 +17,7 @@ async function startServer() {
     await prisma.$connect();
     const app = await initializeApp();
 
-    app.listen(PORT, () => {
+    app.listen(+PORT, HOST_NAME, () => {
       console.table(Object.values(data));
     });
   } catch (err) {

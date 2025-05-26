@@ -74,4 +74,20 @@ export class UserController {
     await this.userService.resetPassword(code, newPassword);
     res.status(200).json({ message: 'Password reset successfully' });
   });
+
+  saveFcmToken = asyncWrapper(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const { fcm_token } = req.body;
+    console.log('saveFcmToken', fcm_token);
+
+    const result = await this.userService.saveFcmToken(userId, fcm_token);
+    res.status(200).json(result);
+  });
+
+  sendNotification = asyncWrapper(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const { title, body, data } = req.body;
+    await this.userService.sendNotification(userId, title, body, data);
+    res.status(200).json({ message: 'Notification successfully test' });
+  });
 }

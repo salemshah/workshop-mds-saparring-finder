@@ -27,9 +27,9 @@ export default function expressLoader(app: Application): void {
   // API Routes
   app.use('/api', routes);
 
-  app.get('/health', (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.json({
-      message: 'Success message',
+      message: 'I am fine',
     });
   });
 }
