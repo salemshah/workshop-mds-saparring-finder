@@ -24,6 +24,7 @@ model User {
   reset_password_code         String?
   reset_password_code_expires DateTime?
   profile                     Profile?
+  fcmToken                    String?
   availability                Availability[]
   sparringsAsRequester        Sparring[]     @relation("Requester")
   sparringsAsPartner          Sparring[]     @relation("Partner")

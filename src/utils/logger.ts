@@ -14,21 +14,22 @@ const logger = createLogger({
 });
 
 const port = config.server.port;
+const hostname = config.server.hostname;
 
 export const data = {
   1: {
     name: 'API',
-    URL: `http://localhost:${port}/api`,
+    URL: `http://${hostname}:${port}/api`,
     DESCRIPTION: 'Main API endpoint',
   },
   2: {
     name: 'DOCS',
-    URL: `http://localhost:${port}/api-docs`,
+    URL: `http://${hostname}:${port}/api-docs`,
     DESCRIPTION: 'API documentation (Swagger UI)',
   },
   3: {
     name: 'METRICS',
-    URL: `http://localhost:${port}/api-metrics`,
+    URL: `http://${hostname}:${port}/api-metrics`,
     DESCRIPTION: 'Metrics endpoint for monitoring and HTTP request tracking',
   },
   4: { name: 'PORT', URL: port, DESCRIPTION: 'Application running port' },

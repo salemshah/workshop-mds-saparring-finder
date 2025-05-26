@@ -6,6 +6,10 @@ dotenv.config();
 const config = {
   server: {
     port: process.env.PORT || (8000 as number),
+    hostname: process.env.SERVER_HOST_NAME || 'localhost',
+  },
+  fcm: {
+    serverKey: process.env.FCM_SERVER_KEY!,
   },
   jwt: {
     accessTokenSecret:
