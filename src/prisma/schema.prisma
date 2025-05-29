@@ -74,7 +74,7 @@ model Availability {
 
   user User @relation(fields: [user_id], references: [id])
 
-  Sparring Sparring[]
+  sparrings Sparring[]
 }
 
 model Sparring {
@@ -99,7 +99,7 @@ model Sparring {
   cancelled_by_user User?        @relation("CancelledBy", fields: [cancelled_by_user_id], references: [id])
   availability      Availability @relation(fields: [availability_id], references: [id])
 
-  User User[]
+  user User[]
 }
 
 model Message {

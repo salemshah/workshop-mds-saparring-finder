@@ -104,6 +104,7 @@ export class AvailabilityService {
     if (isNaN(userId)) throw new CustomError('Invalid ID', 400, 'INVALID_ID');
     const availabilities = await prisma.availability.findMany({
       where: { user_id: userId },
+      include: { sparrings: true },
       orderBy: { specific_date: 'asc' },
     });
 
