@@ -4,6 +4,7 @@ import profileRoute from './profile.routes';
 import favoriteRoute from './favorite.routes';
 import availabilityRoutes from './availability.routes';
 import sparringRoutes from './sparring.routes';
+import notificationRoutes from './notification.routes';
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/profile', profileRoute);
 router.use('/favorite', favoriteRoute);
 router.use('/availability', availabilityRoutes);
 router.use('/sparring', sparringRoutes);
+router.use('/notification', notificationRoutes);
 
 export default router;

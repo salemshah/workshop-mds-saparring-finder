@@ -70,7 +70,7 @@ export class ProfileController {
   // -------------------------------------------------------------------------
   // GET /profile/all – list every profile
   // -------------------------------------------------------------------------
-  listProfiles = asyncWrapper(async (_req: Request, res: Response) => {
+  listProfiles = asyncWrapper(async (req: Request, res: Response) => {
     const result: ProfilesResponse = await this.profileService.listProfiles();
     res.status(200).json(result);
   });

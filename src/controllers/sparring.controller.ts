@@ -26,6 +26,22 @@ export class SparringController {
   });
 
   // -------------------------------------------------------------------------
+  // GET /sparring – get all sparrings of auth user and his partners id
+  // -------------------------------------------------------------------------
+  getAllByRequestIdAndPartnerId = asyncWrapper(
+    async (req: Request, res: Response) => {
+      const userId = req.user.id;
+      const partnerId = Number(req.params.partnerId);
+      const result: SparringsResponse =
+        await this.sparringService.getSparringsByRequestedIdAndPartnerId(
+          userId,
+          partnerId
+        );
+      res.status(200).json(result);
+    }
+  );
+
+  // -------------------------------------------------------------------------
   // GET /sparring/:id – get sparring by ID
   // -------------------------------------------------------------------------
   getById = asyncWrapper(async (req: Request, res: Response) => {

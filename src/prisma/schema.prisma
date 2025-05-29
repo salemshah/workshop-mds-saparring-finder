@@ -31,10 +31,12 @@ model User {
   sparringsCancelled          Sparring[]     @relation("CancelledBy")
   messagesSent                Message[]      @relation("MessagesSent")
   messagesReceived            Message[]      @relation("MessagesReceived")
-  notifications               Notification[]
   favorites                   Favorite[]     @relation("FavoritesFrom")
   favoritedBy                 Favorite[]     @relation("FavoritesTo")
   Sparring                    Sparring[]
+
+  sentNotifications     Notification[] @relation("Sender")
+  receivedNotifications Notification[] @relation("Recipient")
 }
 
 model Profile {
@@ -119,7 +121,8 @@ model Message {
 
 model Notification {
   id         Int       @id @default(autoincrement())
-  user_id    Int
+  user_id    Int // recipient
+  sender_id  Int // who triggered the action (e.g. requester)
   type       String
   title      String
   body       String
@@ -129,7 +132,8 @@ model Notification {
   read_at    DateTime?
   action_url String?
 
-  user User @relation(fields: [user_id], references: [id])
+  user   User @relation("Recipient", fields: [user_id], references: [id])
+  sender User @relation("Sender", fields: [sender_id], references: [id])
 }
 
 model Favorite {
