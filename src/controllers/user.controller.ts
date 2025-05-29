@@ -75,19 +75,15 @@ export class UserController {
     res.status(200).json({ message: 'Password reset successfully' });
   });
 
+  /**
+   * Save token as soon as the user is logged in app.
+   * @route PUT /user/save-token
+   * @access Private
+   */
   saveFcmToken = asyncWrapper(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const { fcm_token } = req.body;
-    console.log('saveFcmToken', fcm_token);
-
     const result = await this.userService.saveFcmToken(userId, fcm_token);
     res.status(200).json(result);
-  });
-
-  sendNotification = asyncWrapper(async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const { title, body, data } = req.body;
-    await this.userService.sendNotification(userId, title, body, data);
-    res.status(200).json({ message: 'Notification successfully test' });
   });
 }

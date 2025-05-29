@@ -3,7 +3,7 @@ import prisma from '../prisma/client';
 import { Prisma, Sparring } from '@prisma/client';
 import CustomError from '../utils/customError';
 import { DateTime } from 'luxon';
-import { sendPushNotification } from './notification.service';
+import { NotificationService } from './notification.service';
 
 export interface SparringsResponse {
   sparrings: Sparring[];
@@ -15,6 +15,8 @@ const CANCELLED_STATUS = 'CANCELLED';
 
 @Service()
 export class SparringService {
+  constructor(private readonly notificationService: NotificationService) {}
+
   /* ---------------------------- Create ----------------------------- */
   async createSparring(
     requesterId: number,
@@ -62,7 +64,69 @@ export class SparringService {
       },
     });
 
+    // Get requester's profile info
+    const requesterProfile = await prisma.profile.findUnique({
+      where: { user_id: requesterId },
+      select: { first_name: true },
+    });
+
+    // Notify partner about the sparring request
+    await this.notificationService.createAndSend({
+      recipientId: partner_id,
+      senderId: requesterId,
+      title: 'New Sparring Request',
+      body: `${requesterProfile?.first_name ?? 'Someone'} sent you a sparring request.`,
+      type: 'sparring_request',
+      actionUrl: `/sparring/${sparring.id}`,
+      data: {
+        sparringId: sparring.id.toString(),
+      },
+    });
+
     return { sparrings: [sparring] };
+  }
+
+  /* ---------------------------- Confirm ---------------------------- */
+  async confirmSparring(
+    id: number,
+    partnerId: number
+  ): Promise<SparringsResponse> {
+    console.log('Sparring confirmed', id);
+    const sparring = await prisma.sparring.findUnique({ where: { id } });
+    if (!sparring) throw new CustomError('Not found', 404, 'NOT_FOUND');
+    if (sparring.partner_id !== partnerId)
+      throw new CustomError('Not allowed', 403, 'FORBIDDEN');
+    if (sparring.status !== PENDING_STATUS)
+      throw new CustomError('Already processed', 400, 'INVALID_STATUS');
+
+    const confirmed = await prisma.sparring.update({
+      where: { id },
+      data: {
+        status: CONFIRMED_STATUS,
+        confirmed_at: new Date(),
+      },
+    });
+
+    const partnerProfile = await prisma.profile.findUnique({
+      where: { user_id: partnerId },
+      select: { first_name: true },
+    });
+
+    // Notify requester that partner accepted the sparring
+    await this.notificationService.createAndSend({
+      recipientId: sparring.requester_id,
+      senderId: partnerId,
+      title: 'Sparring Accepted',
+      body: `${partnerProfile?.first_name ?? 'Your partner'} accepted your sparring request.`,
+      type: 'sparring_confirmed',
+      actionUrl: `/sparring/${sparring.id}`,
+      data: {
+        sparringId: sparring.id.toString(),
+        screen: 'notification',
+      },
+    });
+
+    return { sparrings: [confirmed] };
   }
 
   /* ---------------------------- Update ----------------------------- */
@@ -101,94 +165,6 @@ export class SparringService {
     });
 
     return { sparrings: [updated] };
-  }
-
-  /* ---------------------------- Confirm ---------------------------- */
-  // async confirmSparring(
-  //   id: number,
-  //   partnerId: number
-  // ): Promise<SparringsResponse> {
-  //   const sparring = await prisma.sparring.findUnique({ where: { id } });
-  //   if (!sparring) throw new CustomError('Not found', 404, 'NOT_FOUND');
-  //
-  //   if (sparring.partner_id !== partnerId) {
-  //     throw new CustomError('Not allowed', 403, 'FORBIDDEN');
-  //   }
-  //   if (sparring.status !== PENDING_STATUS) {
-  //     throw new CustomError('Already processed', 400, 'INVALID_STATUS');
-  //   }
-  //
-  //   const confirmed = await prisma.sparring.update({
-  //     where: { id },
-  //     data: {
-  //       status: CONFIRMED_STATUS,
-  //       confirmed_at: new Date(),
-  //     },
-  //   });
-  //   return { sparrings: [confirmed] };
-  // }
-
-  async confirmSparring(
-    id: number,
-    partnerId: number
-  ): Promise<SparringsResponse> {
-    const sparring = await prisma.sparring.findUnique({
-      where: { id },
-    });
-
-    if (!sparring) {
-      throw new CustomError('Not found', 404, 'NOT_FOUND');
-    }
-
-    if (sparring.partner_id !== partnerId) {
-      throw new CustomError('Not allowed', 403, 'FORBIDDEN');
-    }
-
-    if (sparring.status !== PENDING_STATUS) {
-      throw new CustomError('Already processed', 400, 'INVALID_STATUS');
-    }
-
-    const confirmed = await prisma.sparring.update({
-      where: { id },
-      data: {
-        status: CONFIRMED_STATUS,
-        confirmed_at: new Date(),
-      },
-    });
-
-    // Get FCM token of requester
-    const requester = await prisma.user.findUnique({
-      where: { id: sparring.requester_id },
-      select: { fcmToken: true },
-    });
-
-    // Get partner first name for personalization
-    const partner = await prisma.profile.findUnique({
-      where: { user_id: partnerId },
-      select: { first_name: true },
-    });
-
-    if (!partner) {
-      console.warn(
-        `[Notification] No profile found for partner ID: ${partnerId}`
-      );
-    }
-
-    // Send push notification if requester has a valid FCM token
-    if (requester?.fcmToken) {
-      try {
-        await sendPushNotification(
-          requester.fcmToken,
-          'Sparring Accepted',
-          `${partner?.first_name ?? 'Your partner'} accepted your sparring request.`,
-          { sparringId: id.toString() } // All data values must be strings for FCM
-        );
-      } catch (error) {
-        console.error('[FCM] Failed to send push notification:', error);
-      }
-    }
-
-    return { sparrings: [confirmed] };
   }
 
   /* ---------------------------- Cancel ----------------------------- */
@@ -245,6 +221,39 @@ export class SparringService {
 
     const sparrings = await prisma.sparring.findMany({
       where: filter,
+      orderBy: { scheduled_date: 'asc' },
+    });
+
+    const enrichedSparrings = await Promise.all(
+      sparrings.map(async (sparring) => {
+        const requesterProfile = await prisma.profile.findUnique({
+          where: { id: sparring.requester_id },
+        });
+
+        const partnerProfile = await prisma.profile.findUnique({
+          where: { id: sparring.partner_id },
+        });
+
+        return {
+          ...sparring,
+          requesterProfile,
+          partnerProfile,
+        };
+      })
+    );
+
+    return { sparrings: enrichedSparrings as never };
+  }
+
+  /* ------------------------ Get all for requestId =>(userId) and partnerId ----------------------- */
+  async getSparringsByRequestedIdAndPartnerId(
+    userId: number,
+    partnerId: number
+  ): Promise<SparringsResponse> {
+    if (isNaN(userId)) throw new CustomError('Invalid ID', 400, 'INVALID_ID');
+
+    const sparrings = await prisma.sparring.findMany({
+      where: { requester_id: userId, partner_id: partnerId },
       orderBy: { scheduled_date: 'asc' },
     });
 

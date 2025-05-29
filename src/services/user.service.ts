@@ -6,7 +6,7 @@ import CustomError from '../utils/customError';
 import { sendEmail } from '../utils/sendEmail';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { excludeField } from '../utils/helper-functions';
-import { sendPushNotification } from './notification.service';
+import { NotificationService } from './notification.service';
 
 export type SafeUser = Omit<
   User,
@@ -24,6 +24,8 @@ export type AuthUserResponse = {
 
 @Service()
 export class UserService {
+  constructor(private readonly notificationService: NotificationService) {}
+
   async registerUser(email: string, password: string): Promise<SafeUser> {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
@@ -195,29 +197,12 @@ export class UserService {
       throw new CustomError('Missing FCM token', 400, 'MISSING_FCM_TOKEN');
     }
 
+    console.log('new token rrrrr ==> ', { token });
     await prisma.user.update({
       where: { id: userId },
       data: { fcmToken: token },
     });
 
     return { message: 'FCM token saved successfully' };
-  }
-
-  async sendNotification(
-    userId: number,
-    title: string,
-    body: string,
-    data: Record<string, string> = {}
-  ): Promise<{ message: string }> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { fcmToken: true },
-    });
-
-    if (!user || !user.fcmToken) {
-      throw new CustomError('User not found', 404, 'USER_NOT_FOUND');
-    }
-    await sendPushNotification(user.fcmToken, title, body, data);
-    return { message: 'Notification sent successfully' };
   }
 }

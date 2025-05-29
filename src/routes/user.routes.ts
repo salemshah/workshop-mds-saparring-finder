@@ -41,11 +41,6 @@ router.put(
 );
 
 // FCM token saving route
-router.post('/save-token', isAuthenticated, userController.saveFcmToken);
-router.post(
-  '/send-notification',
-  isAuthenticated,
-  userController.sendNotification
-);
+router.put('/save-token', isAuthenticated, userController.saveFcmToken);
 
 export default router;
