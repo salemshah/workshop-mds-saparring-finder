@@ -259,11 +259,11 @@ export class SparringService {
     const enrichedSparrings = await Promise.all(
       sparrings.map(async (sparring) => {
         const requesterProfile = await prisma.profile.findUnique({
-          where: { id: sparring.requester_id },
+          where: { user_id: sparring.requester_id },
         });
 
         const partnerProfile = await prisma.profile.findUnique({
-          where: { id: sparring.partner_id },
+          where: { user_id: sparring.partner_id },
         });
 
         return {
