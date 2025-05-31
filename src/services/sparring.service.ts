@@ -80,6 +80,7 @@ export class SparringService {
       actionUrl: `/sparring/${sparring.id}`,
       data: {
         sparringId: sparring.id.toString(),
+        screen: 'notification',
       },
     });
 
@@ -91,7 +92,6 @@ export class SparringService {
     id: number,
     partnerId: number
   ): Promise<SparringsResponse> {
-    console.log('Sparring confirmed', id);
     const sparring = await prisma.sparring.findUnique({ where: { id } });
     if (!sparring) throw new CustomError('Not found', 404, 'NOT_FOUND');
     if (sparring.partner_id !== partnerId)

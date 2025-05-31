@@ -129,10 +129,15 @@ export class NotificationService {
     body: string,
     data: Record<string, string> = {}
   ): Promise<void> {
-    await admin.messaging().send({
-      token,
-      notification: { title, body },
-      data,
-    });
+    try {
+      const notification = await admin.messaging().send({
+        token,
+        notification: { title, body },
+        data,
+      });
+      console.log({ notification });
+    } catch (error: unknown) {
+      console.error(error);
+    }
   }
 }

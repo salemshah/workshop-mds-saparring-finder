@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for Sparring Finder
 
 env:
   SERVER_DIR: "/root/sparring-finder-rest-full-api"
@@ -8,11 +8,12 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and Test App
     runs-on: ubuntu-latest
 
     services:
-      postgres:
+      postgres-test-db:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: postgres
@@ -30,19 +31,19 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db?schema=public
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Source Code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Wait for PostgreSQL to be ready
+      - name: Wait for PostgreSQL Test DB
         run: |
           for i in {1..30}; do
             if pg_isready -h localhost -p 5432; then
@@ -54,62 +55,39 @@ jobs:
             fi
           done
 
-      - name: Set up Prisma
-        run: |
-          if npm run prisma:generate; then
-            echo "Prisma client generated successfully."
-          else
-            echo "Failed to generate Prisma client."
-            exit 1
-          fi
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
 
-      - name: Run Prisma migrations
-        run: |
-          if npm run prisma:migrate:deploy; then
-            echo "Prisma migrations deployed successfully."
-          else
-            echo "Failed to deploy Prisma migrations."
-            exit 1
-          fi
+      - name: Apply Prisma Migrations
+        run: npm run prisma:migrate:deploy
 
       - name: Validate Prisma Schema
-        run: |
-          if npx prisma validate; then
-            echo "Prisma schema is valid."
-          else
-            echo "Prisma schema validation failed."
-            exit 1
-          fi
+        run: npx prisma validate
 
-      - name: Check Prisma Database Connection
-        run: |
-          if npx prisma db pull; then
-            echo "Prisma successfully connected to PostgreSQL."
-          else
-            echo "Failed to connect Prisma to PostgreSQL."
-            exit 1
-          fi
+      - name: Check DB Connection
+        run: npx prisma db pull
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      - name: Run Linting
+      - name: Run Linter
         run: npm run lint:ci
 
-      - name: Run commitlint
+      - name: Run Commitlint
         run: npx commitlint --from=origin/main --to=HEAD
 
-      - name: Run tests
+      - name: Run Unit/Integration Tests
         run: npm run test:ci
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
 
   deploy:
-    needs: build
+    name: Deploy to Production
+    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code for Deployment
         uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
@@ -118,7 +96,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: 🛠️ Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -126,66 +104,41 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/sparring-finder-rest-full-api:latest
 
-      # Start the ssh-agent and add the private key
-      - name: Start ssh-agent
+      - name: Start SSH Agent and Add Key
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
-      # Create .env.prod on Server
-      - name: Create .env on Server
+      - name: Upload Production .env File
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}"
           echo "${{ vars.ENV_PROD_FILE }}" | tr -d '\r' | ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cat > ${{ env.SERVER_DIR }}/.env"
 
-
-      # Copy docker-compose.prod.yml to Server
-      - name: Copy docker-compose.prod.yml to Server
+      - name: Upload Docker Compose File
         run: |
           scp -o StrictHostKeyChecking=no docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/docker-compose.prod.yml
 
-
-      # Copy Nginx Config to VPS
-      - name: Copy Nginx Config to VPS
+      - name: Upload Nginx Configuration
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.SERVER_DIR }}/nginx/conf.d"
           scp -o StrictHostKeyChecking=no nginx/conf.d/default.conf ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_DIR }}/nginx/conf.d/default.conf
 
-
-      # Enable Nginx Config on VPS
-      - name: Enable Nginx Config
+      - name: Enable and Reload Nginx Config
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-          sudo cp ${{ env.SERVER_DIR }}/nginx/conf.d/default.conf /etc/nginx/sites-available/sparring-finder-app.com
-
-          # Remove existing symbolic link if it exists
-          sudo rm -f /etc/nginx/sites-enabled/sparring-finder-app.store
-
-          # Create symbolic link to enable the site
-          sudo ln -sf /etc/nginx/sites-available/sparring-finder-app.store /etc/nginx/sites-enabled/
-
-          # Test Nginx configuration
+          sudo cp ${{ env.SERVER_DIR }}/nginx/conf.d/default.conf /etc/nginx/sites-available/sparring-finder-app.duckdns.org
+          sudo rm -f /etc/nginx/sites-enabled/sparring-finder-app.duckdns.org
+          sudo ln -sf /etc/nginx/sites-available/sparring-finder-app.duckdns.org /etc/nginx/sites-enabled/
           sudo nginx -t && sudo systemctl reload nginx
           EOF
 
-
-      - name: Deploy Containers
+      - name: Deploy Latest Docker Image
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
           cd ${{ env.SERVER_DIR }}
-
-          # Stop and remove old containers
           docker compose --env-file .env -f docker-compose.prod.yml down
-
-          # Pull the latest image
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/sparring-finder-rest-full-api:latest
-
-          # Start the containers
           docker compose --env-file .env -f docker-compose.prod.yml up -d
-
-          # Clean up unused Docker images
           docker image prune -f
           EOF
-
-
