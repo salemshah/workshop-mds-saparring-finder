@@ -6,9 +6,10 @@ RUN apt-get update && apt-get install -y openssl
 
 WORKDIR /app
 
-# Copy package.json and lock file
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json ./
+
+# Install production dependencies
+RUN npm ci --omit=dev
 
 # Copy Prisma schema and generate client
 COPY src/prisma ./src/prisma
@@ -19,27 +20,28 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
-# Stage 2: Run
+# Stage 2: Run (lean runtime image)
 FROM node:20-slim
 
-# Install dependencies: OpenSSL + netcat-openbsd + curl
-RUN apt-get update && apt-get install -y openssl netcat-openbsd curl
+# Install required runtime packages
+RUN apt-get update && apt-get install -y openssl curl netcat-openbsd && apt-get clean
 
 WORKDIR /app
 
-# Copy build artifacts and node_modules from the builder stage
+# Copy compiled app and runtime deps from build stage
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
-COPY package*.json ./
-
-# Copy Prisma schema
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/src/prisma ./src/prisma
 
-# Copy entrypoint script
+# Copy and enable entrypoint script
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
+# Set environment and expose port
 ENV NODE_ENV=production
 EXPOSE 8000
 
+# Start script
 ENTRYPOINT ["./entrypoint.sh"]
