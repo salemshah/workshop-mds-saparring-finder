@@ -26,18 +26,21 @@ RUN npm run build
 # Stage 2: Run
 FROM node:20-slim
 
+# Install necessary packages
 RUN apt-get update && apt-get install -y openssl curl netcat-openbsd && apt-get clean
 
 WORKDIR /app
 
+# Copy compiled app and dependencies
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 
-# Copy the service account JSON
-COPY --from=builder /app/build/config/firebase-service-account.json ./build/config/firebase-service-account.json
+# ✅ Copy the service account JSON file directly from the source
+COPY src/config/firebase-service-account.json ./build/config/firebase-service-account.json
 
+# Entrypoint
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
