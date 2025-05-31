@@ -1,17 +1,12 @@
 # Stage 1: Build
 FROM node:20-slim AS builder
 
-# Install OpenSSL for Prisma
 RUN apt-get update && apt-get install -y openssl
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-
-# Prevent prepare script from running
 ENV npm_config_ignore_scripts=true
-
-# Install production dependencies
 RUN npm ci
 
 # Copy Prisma schema and generate client
@@ -26,21 +21,18 @@ RUN npm run build
 # Stage 2: Run
 FROM node:20-slim
 
-# Install necessary packages
 RUN apt-get update && apt-get install -y openssl curl netcat-openbsd && apt-get clean
 
 WORKDIR /app
 
-# Copy compiled app and dependencies
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 
-# ✅ Copy the service account JSON file directly from the source
+COPY --from=builder /app/src/prisma ./src/prisma
 COPY src/config/firebase-service-account.json ./build/config/firebase-service-account.json
 
-# Entrypoint
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
