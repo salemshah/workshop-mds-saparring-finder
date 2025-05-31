@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install production dependencies
-RUN npm ci
+RUN npm ci --verbose
 
 # Copy Prisma schema and generate client
 COPY src/prisma ./src/prisma
