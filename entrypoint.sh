@@ -1,11 +1,7 @@
 #!/bin/sh
 
-set -e
+echo "📦 Running Prisma client generation..."
+npx prisma generate
 
-# Run Prisma migrations
-echo "Running Prisma migrations..."
-npx prisma migrate deploy
-
-# Start the application
-echo "Starting the application..."
-exec node build/server.js
+echo "🚀 Starting the app..."
+exec node build/main.js
