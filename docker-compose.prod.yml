@@ -2,7 +2,6 @@ services:
   app:
     image: salemshah/sparring-finder-rest-full-api:latest
     restart: always
-    command: sleep infinity
     env_file:
       - .env
     ports:
