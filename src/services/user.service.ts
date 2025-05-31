@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import prisma from '../prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 import CustomError from '../utils/customError';
 import { sendEmail } from '../utils/sendEmail';
@@ -31,7 +31,7 @@ export class UserService {
     if (existing)
       throw new CustomError('Email already in use', 409, 'EMAIL_IN_USE');
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 10); // ✅ Works the same
     const verification_code = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
@@ -186,9 +186,6 @@ export class UserService {
     ]);
   }
 
-  /**
-   * Save or update the FCM token for the logged-in user.
-   */
   async saveFcmToken(
     userId: number,
     token: string

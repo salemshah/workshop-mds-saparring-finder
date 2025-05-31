@@ -7,7 +7,7 @@ services:
     ports:
       - "8010:8000"
     environment:
-      DATABASE_URL: ${DATABASE_URL_PRODUCTION}
+      DATABASE_URL: ${DATABASE_URL}
     networks:
       - app-network
     deploy:

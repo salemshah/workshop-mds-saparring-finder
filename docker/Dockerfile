@@ -12,7 +12,7 @@ COPY package.json package-lock.json ./
 ENV npm_config_ignore_scripts=true
 
 # Install production dependencies
-RUN npm ci --unsafe-perm
+RUN npm ci
 
 # Copy Prisma schema and generate client
 COPY src/prisma ./src/prisma
