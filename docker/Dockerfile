@@ -8,6 +8,9 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
+# Prevent prepare script from running
+ENV npm_config_ignore_scripts=true
+
 # Install production dependencies
 RUN npm ci --verbose
 
