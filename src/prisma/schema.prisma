@@ -55,6 +55,9 @@ model Profile {
   gym_name         String
   city             String
   country          String
+  address          String
+  latitude         Float
+  longitude        Float
   verified         Boolean?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt

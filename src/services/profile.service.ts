@@ -48,11 +48,15 @@ export class ProfileService {
       throw new CustomError('Profile already exists', 409, 'PROFILE_EXISTS');
     }
 
-    // Create profile (without include – easier) then fetch with favorites.
+    // Destructure latitude, longitude, and date_of_birth so we can convert them.
+    const { latitude, longitude, date_of_birth, ...rest } = profileData;
+
     await prisma.profile.create({
       data: {
-        ...profileData,
-        date_of_birth: new Date(profileData.date_of_birth),
+        ...rest,
+        date_of_birth: new Date(date_of_birth),
+        latitude: parseFloat(String(latitude)),
+        longitude: parseFloat(String(longitude)),
         user: { connect: { id: userId } },
       },
     });
@@ -81,12 +85,21 @@ export class ProfileService {
       throw new CustomError('Profile not found', 404, 'PROFILE_NOT_FOUND');
     }
 
+    // Destructure latitude, longitude, and date_of_birth so we can convert them.
+    const { latitude, longitude, date_of_birth, ...restUpdate } = updateData;
+
     await prisma.profile.update({
       where: { user_id: userId },
       data: {
-        ...updateData,
-        ...(updateData.date_of_birth && {
-          date_of_birth: new Date(updateData.date_of_birth),
+        ...restUpdate,
+        ...(date_of_birth && {
+          date_of_birth: new Date(date_of_birth),
+        }),
+        ...(latitude != null && {
+          latitude: parseFloat(String(latitude)),
+        }),
+        ...(longitude != null && {
+          longitude: parseFloat(String(longitude)),
         }),
       },
     });
@@ -96,7 +109,9 @@ export class ProfileService {
       include: userFavoritesInclude,
     });
 
-    return { profiles: updated ? [updated as ProfileWithFavorites] : [] };
+    return {
+      profiles: updated ? [updated as ProfileWithFavorites] : [],
+    };
   }
 
   /** --------------------------- Get / Delete ---------------------------- */
@@ -105,7 +120,9 @@ export class ProfileService {
       where: { user_id: userId },
       include: userFavoritesInclude,
     });
-    return { profiles: profile ? [profile as ProfileWithFavorites] : [] };
+    return {
+      profiles: profile ? [profile as ProfileWithFavorites] : [],
+    };
   }
 
   async deleteProfile(userId: number): Promise<void> {
@@ -140,7 +157,9 @@ export class ProfileService {
       where: { user_id: userId },
       include: userFavoritesInclude,
     });
-    return { profiles: updated ? [updated as ProfileWithFavorites] : [] };
+    return {
+      profiles: updated ? [updated as ProfileWithFavorites] : [],
+    };
   }
 
   /** --------------------------- Lists ----------------------------------- */
@@ -186,8 +205,18 @@ export class ProfileService {
         // Full-name (first + last)
         {
           AND: [
-            { first_name: { contains: terms[0] ?? '', mode: 'insensitive' } },
-            { last_name: { contains: terms[1] ?? '', mode: 'insensitive' } },
+            {
+              first_name: {
+                contains: terms[0] ?? '',
+                mode: 'insensitive',
+              },
+            },
+            {
+              last_name: {
+                contains: terms[1] ?? '',
+                mode: 'insensitive',
+              },
+            },
           ],
         },
       ],
