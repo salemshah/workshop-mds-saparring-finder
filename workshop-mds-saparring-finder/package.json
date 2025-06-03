@@ -1,0 +1,33 @@
+{
+  "name": "workshop-mds-saparring-finder",
+  "version": "1.0.0",
+  "description": "SPARRING FINDER API project",
+  "main": "src/app.ts",
+  "scripts": {
+    "start": "ts-node src/app.ts",
+    "build": "tsc",
+    "dev": "ts-node-dev src/app.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.4",
+    "ts-node": "^10.4.0",
+    "ts-node-dev": "^1.1.8",
+    "jest": "^27.0.6",
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.11.7",
+    "@types/express": "^4.17.13"
+  },
+  "keywords": [
+    "API",
+    "TypeScript",
+    "Express"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
