@@ -170,6 +170,804 @@ paths:
                     type: string
                     example: Password has been updated.
 
+  /profiles:
+    get:
+      tags:
+        - Profile
+      summary: Get current user's profile
+      description: Returns the profile of the currently authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Profile
+      summary: Create a new profile
+      description: Creates a new profile for the authenticated user. Accepts multipart/form-data for photo upload.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                # Ajoute ici les autres champs de création de profil selon UserProfile
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Profile
+      summary: Update current user's profile
+      description: Updates the profile of the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Profile
+      summary: Delete current user's profile
+      description: Deletes the profile of the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Profile deleted
+
+  /profiles/all:
+    get:
+      tags:
+        - Profile
+      summary: List all profiles
+      description: Returns a list of all user profiles.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+
+  /profiles/exists:
+    get:
+      tags:
+        - Profile
+      summary: Check if current user has a profile
+      description: Returns true if the authenticated user has a profile.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Existence status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+
+  /profiles/photo:
+    patch:
+      tags:
+        - Profile
+      summary: Update profile photo
+      description: Updates the profile photo of the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Photo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /profiles/search:
+    get:
+      tags:
+        - Profile
+      summary: Search profiles
+      description: Search profiles by query string.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+
+  /profiles/filter:
+    get:
+      tags:
+        - Profile
+      summary: Filter profiles
+      description: Filter profiles by various parameters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: [ajoute ici les paramètres de filtre, ex: age, gender, etc.]
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter parameter
+      responses:
+        '200':
+          description: Filtered results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+
+  /sparrings:
+    get:
+      tags:
+        - Sparring
+      summary: List all sparring sessions
+      description: Returns a list of all sparring sessions.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of sparring sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SparringSession'
+    post:
+      tags:
+        - Sparring
+      summary: Create a new sparring session
+      description: Creates a new sparring session.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SparringSession'
+      responses:
+        '201':
+          description: Sparring session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparringSession'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sparrings/{id}:
+    get:
+      tags:
+        - Sparring
+      summary: Get sparring session by ID
+      description: Returns details of a sparring session by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sparring session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparringSession'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Sparring
+      summary: Update sparring session
+      description: Updates a sparring session by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SparringSession'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparringSession'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Sparring
+      summary: Delete sparring session
+      description: Deletes a sparring session by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sparrings/search:
+    get:
+      tags:
+        - Sparring
+      summary: Search sparring sessions
+      description: Search sparring sessions by query string.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SparringSession'
+
+  /sparrings/filter:
+    get:
+      tags:
+        - Sparring
+      summary: Filter sparring sessions
+      description: Filter sparring sessions by various parameters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: [ajoute ici les paramètres de filtre, ex: date, location, etc.]
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter parameter
+      responses:
+        '200':
+          description: Filtered results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SparringSession'
+
+  /sparrings/join/{id}:
+    post:
+      tags:
+        - Sparring
+      summary: Join a sparring session
+      description: Join a sparring session by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Joined session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparringSession'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sparrings/leave/{id}:
+    post:
+      tags:
+        - Sparring
+      summary: Leave a sparring session
+      description: Leave a sparring session by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Left session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparringSession'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'                
+
+  /availabilities:
+    get:
+      tags:
+        - Availability
+      summary: Get all availabilities for current user
+      description: Returns all availabilities for the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of availabilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Availability'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Availability
+      summary: Create a new availability
+      description: Creates a new availability for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Availability'
+      responses:
+        '201':
+          description: Availability created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Availability'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /availabilities/all/{targetUserId}:
+    get:
+      tags:
+        - Availability
+      summary: Get all availabilities for a specific user
+      description: Returns all availabilities for the user with the given ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user whose availabilities to retrieve
+      responses:
+        '200':
+          description: List of availabilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Availability'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /availabilities/{id}:
+    get:
+      tags:
+        - Availability
+      summary: Get availability by ID
+      description: Returns a single availability by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Availability ID
+      responses:
+        '200':
+          description: Availability details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Availability'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Availability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Availability
+      summary: Update an availability
+      description: Updates an existing availability by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Availability ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Availability'
+      responses:
+        '200':
+          description: Availability updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Availability'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Availability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Availability
+      summary: Delete an availability
+      description: Deletes an availability by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Availability ID
+      responses:
+        '204':
+          description: Availability deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Availability not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /favorites:
+    get:
+      tags:
+        - Favorite
+      summary: Get all favorites of the authenticated user
+      description: Returns a list of users favorited by the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of favorites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Favorite'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/toggle:
+    post:
+      tags:
+        - Favorite
+      summary: Toggle favorite
+      description: Add or remove a user from favorites.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                favoritedUserId:
+                  type: integer
+                  description: ID of the user to (un)favorite
+      responses:
+        '200':
+          description: Favorite toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Favorite'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/{favoritedUserId}:
+    delete:
+      tags:
+        - Favorite
+      summary: Remove a favorite
+      description: Remove a user from favorites by their user ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: favoritedUserId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user to remove from favorites
+      responses:
+        '204':
+          description: Favorite removed
+        '404':
+          description: Favorite not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications:
+    get:
+      tags:
+        - Notification
+      summary: List all notifications
+      description: Returns all notifications received by the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/{id}:
+    get:
+      tags:
+        - Notification
+      summary: Get notification by ID
+      description: Returns a notification by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Notification ID
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Notification
+      summary: Delete notification by ID
+      description: Deletes a notification by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Notification ID
+      responses:
+        '204':
+          description: Notification deleted
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -272,17 +1070,335 @@ components:
         newPassword:
           type: string
 
+    CreateProfileRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - date_of_birth
+        - gender
+        - weight_class
+        - skill_level
+        - years_experience
+        - preferred_styles
+        - gym_name
+        - city
+        - country
+        - latitude
+        - longitude
+        - address
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        bio:
+          type: string
+        date_of_birth:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        weight_class:
+          type: string
+        skill_level:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Professional]
+        years_experience:
+          type: string
+          maxLength: 11
+        preferred_styles:
+          type: string
+        gym_name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: string
+        longitude:
+          type: string
+        address:
+          type: string
+        verified:
+          type: boolean
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 3
+        last_name:
+          type: string
+          minLength: 3
+        date_of_birth:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        weight_class:
+          type: string
+        skill_level:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Professional]
+        years_experience:
+          type: string
+          maxLength: 11
+        preferred_styles:
+          type: string
+        gym_name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: string
+        longitude:
+          type: string
+        address:
+          type: string
+        verified:
+          type: boolean
+
     UserProfile:
       type: object
       properties:
         id:
           type: integer
-        email:
+        user_id:
+          type: integer
+        first_name:
           type: string
-        is_verified:
+        last_name:
+          type: string
+        bio:
+          type: string
+        date_of_birth:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        weight_class:
+          type: string
+        skill_level:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Professional]
+        years_experience:
+          type: string
+          maxLength: 11
+        preferred_styles:
+          type: string
+        gym_name:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: string
+        longitude:
+          type: string
+        address:
+          type: string
+        verified:
           type: boolean
-        is_active:
+        photo_url:
+          type: string
+
+    # ----------- AVAILABILITY -----------
+    Availability:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        specific_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+
+    CreateAvailabilityRequest:
+      type: object
+      required:
+        - specific_date
+        - start_time
+        - end_time
+        - location
+      properties:
+        specific_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+
+    UpdateAvailabilityRequest:
+      type: object
+      properties:
+        specific_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+
+    # ----------- SPARRING -----------
+    SparringSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        partner_id:
+          type: integer
+        requester_id:
+          type: integer
+        availability_id:
+          type: integer
+        scheduled_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+
+    CreateSparringRequest:
+      type: object
+      required:
+        - partner_id
+        - availability_id
+        - scheduled_date
+        - start_time
+        - end_time
+        - location
+      properties:
+        partner_id:
+          type: integer
+        availability_id:
+          type: integer
+        scheduled_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+        notes:
+          type: string
+
+    UpdateSparringRequest:
+      type: object
+      properties:
+        scheduled_date:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+        notes:
+          type: string
+
+    CancelSparringRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+         
+    # ----------- FAVORITE -----------
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        favorited_user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        favorited_user:
+          $ref: '#/components/schemas/UserProfile'
+
+    # ----------- NOTIFICATION -----------
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          description: Recipient user ID
+        sender_id:
+          type: integer
+          description: Sender user ID
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        is_read:
           type: boolean
+        via:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        action_url:
+          type: string
+          nullable: true
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        sender:
+          $ref: '#/components/schemas/UserProfile'
 
     ErrorResponse:
       type: object

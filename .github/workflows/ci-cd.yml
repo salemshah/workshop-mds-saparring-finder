@@ -79,11 +79,11 @@ jobs:
         run: npm run test:ci
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
-      - name: Upload Test Coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          path-to-lcov: ./coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload Test Coverage to Coveralls
+      #   uses: coverallsapp/github-action@v2
+      #   with:
+      #     path-to-lcov: ./coverage/lcov.info
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
 
 
   deploy:
