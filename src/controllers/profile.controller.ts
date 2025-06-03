@@ -33,6 +33,8 @@ export class ProfileController {
 
     if (req.file?.buffer) {
       data.photo_url = await uploadImageToCloudinary(req.file.buffer);
+    } else {
+      data.photo_url = '';
     }
 
     const result: ProfilesResponse = await this.profileService.createProfile(

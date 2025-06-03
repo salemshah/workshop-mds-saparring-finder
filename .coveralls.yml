@@ -1,0 +1,6 @@
+# To use Coveralls, you need to:
+# 1. Create a Coveralls account at https://coveralls.io/ by signing in with your GitHub account
+# 2. Add your repository (https://github.com/salemshah/workshop-mds-sparring-finder-app) to Coveralls
+# 3. Replace the placeholder below with the actual repository token provided by Coveralls
+
+repo_token: tIP3j5WXkKatY3G7wAQWEzAU1iK8GUT7M
