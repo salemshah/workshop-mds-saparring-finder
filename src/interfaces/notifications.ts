@@ -4,4 +4,5 @@ export type NotificationType =
   | 'sparring_cancelled'
   | 'sparring_confirmed'
   | 'message'
+  | 'new_message'
   | 'reminder';

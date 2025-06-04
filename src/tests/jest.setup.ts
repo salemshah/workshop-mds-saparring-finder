@@ -54,7 +54,6 @@ beforeAll(async () => {
     await prisma.user.deleteMany();
 
     app = await initializeApp();
-    console.log('Test setup completed successfully');
   } catch (error) {
     console.error('Error in test setup:', error);
     throw error;
