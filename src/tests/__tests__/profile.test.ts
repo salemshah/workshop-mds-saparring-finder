@@ -109,7 +109,6 @@ describe('Profile Routes', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(profileData);
 
-      console.log('Profile creation response:', res.body);
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty(
         'message',
