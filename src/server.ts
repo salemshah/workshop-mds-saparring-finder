@@ -19,25 +19,22 @@ async function startServer() {
     await prisma.$connect();
     const app = await initializeApp();
 
-    // Create an HTTP server from Express
     const httpServer = http.createServer(app);
 
-    // Attach Socket.IO to that HTTP server
     const io = new SocketIOServer(httpServer, {
       cors: {
-        origin: '*', // adjust as needed
+        origin: '*', // or restrict it to your domain
         methods: ['GET', 'POST'],
         credentials: true,
       },
+      path: '/socket.io',
     });
 
-    // Call our loader to set up auth + event scaffolding
     socketLoader(io);
 
     // Start listening
     httpServer.listen(+PORT, HOST_NAME, () => {
       console.table(Object.values(data));
-      console.log(`🚀 Server listening on http://${HOST_NAME}:${PORT}`);
     });
   } catch (err) {
     logger.error('Failed to start the server:', err);
