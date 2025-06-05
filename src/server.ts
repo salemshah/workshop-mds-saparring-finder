@@ -23,7 +23,7 @@ async function startServer() {
 
     const io = new SocketIOServer(httpServer, {
       cors: {
-        origin: '*', // or restrict it to your domain
+        origin: '*',
         methods: ['GET', 'POST'],
         credentials: true,
       },
