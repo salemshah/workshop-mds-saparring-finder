@@ -24,12 +24,12 @@ export const data = {
   },
   2: {
     name: 'DOCS',
-    URL: `http://${hostname}:${port}/api-docs`,
+    URL: `http://localhost:${port}/api-docs`,
     DESCRIPTION: 'API documentation (Swagger UI)',
   },
   3: {
     name: 'METRICS',
-    URL: `http://${hostname}:${port}/api-metrics`,
+    URL: `http://localhost:${port}/api-metrics`,
     DESCRIPTION: 'Metrics endpoint for monitoring and HTTP request tracking',
   },
   4: { name: 'PORT', URL: port, DESCRIPTION: 'Application running port' },
