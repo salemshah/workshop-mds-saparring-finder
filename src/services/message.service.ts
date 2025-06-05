@@ -1,5 +1,3 @@
-// src/services/message.service.ts
-
 import { Service } from 'typedi';
 import prisma from '../prisma/client';
 import CustomError from '../utils/customError';
