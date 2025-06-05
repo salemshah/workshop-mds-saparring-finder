@@ -13,16 +13,19 @@ interface JwtPayload {
 interface JoinConversationPayload {
   conversationId: number;
 }
+
 interface SendMessagePayload {
   conversationId: number;
   content: string;
   messageType?: string;
   mediaUrl?: string;
 }
+
 interface MessageReadPayload {
   conversationId: number;
   messageId: number;
 }
+
 interface TypingPayload {
   conversationId: number;
   isTyping: boolean;
@@ -325,8 +328,9 @@ export default function socketLoader(io: SocketIOServer) {
                 via: 'push',
                 actionUrl: `/conversations/${conversationId}`,
                 data: {
+                  screen: 'chat',
+                  title: senderProfile.displayName,
                   conversationId: conversationId.toString(),
-                  messageId: newMsg.id.toString(),
                 },
               })
             );
