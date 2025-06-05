@@ -9,16 +9,16 @@ generator client {
 }
 
 model User {
-  id                          Int                        @id @default(autoincrement())
-  email                       String                     @unique
+  id                          Int            @id @default(autoincrement())
+  email                       String         @unique
   password_hash               String
   role                        String
   is_verified                 Boolean
   is_active                   Boolean
   last_login_at               DateTime?
   auth_provider               String
-  created_at                  DateTime                   @default(now())
-  updated_at                  DateTime                   @updatedAt
+  created_at                  DateTime       @default(now())
+  updated_at                  DateTime       @updatedAt
   verification_code           String?
   verification_code_expires   DateTime?
   reset_password_code         String?
@@ -26,17 +26,17 @@ model User {
   profile                     Profile?
   fcmToken                    String?
   availability                Availability[]
-  sparringsAsRequester        Sparring[]                 @relation("Requester")
-  sparringsAsPartner          Sparring[]                 @relation("Partner")
-  sparringsCancelled          Sparring[]                 @relation("CancelledBy")
-  messagesSent                Message[]                  @relation("MessagesSent")
-  messagesReceived            Message[]                  @relation("MessagesReceived")
-  favorites                   Favorite[]                 @relation("FavoritesFrom")
-  favoritedBy                 Favorite[]                 @relation("FavoritesTo")
+  sparringsAsRequester        Sparring[]     @relation("Requester")
+  sparringsAsPartner          Sparring[]     @relation("Partner")
+  sparringsCancelled          Sparring[]     @relation("CancelledBy")
+  messagesSent                Message[]      @relation("MessagesSent")
+  messagesReceived            Message[]      @relation("MessagesReceived")
+  favorites                   Favorite[]     @relation("FavoritesFrom")
+  favoritedBy                 Favorite[]     @relation("FavoritesTo")
   Sparring                    Sparring[]
-  sentNotifications           Notification[]             @relation("Sender")
-  receivedNotifications       Notification[]             @relation("Recipient")
-  conversationParticipant     ConversationParticipant[]
+
+  sentNotifications     Notification[] @relation("Sender")
+  receivedNotifications Notification[] @relation("Recipient")
 }
 
 model Profile {
@@ -105,53 +105,27 @@ model Sparring {
   user User[]
 }
 
-model Conversation {
-  id          Int                       @id @default(autoincrement())
-  title       String?
-  is_group    Boolean                   @default(false)
-  created_at  DateTime                  @default(now())
-  updated_at  DateTime                  @updatedAt
-
-  participants ConversationParticipant[]
-  messages     Message[]
-}
-
-model ConversationParticipant {
-  id              Int           @id @default(autoincrement())
-  conversation_id Int
-  user_id         Int
-  last_read_at    DateTime?
-
-  conversation Conversation @relation(fields: [conversation_id], references: [id])
-  user         User         @relation(fields: [user_id], references: [id])
-
-  @@unique([conversation_id, user_id])
-}
-
-
 model Message {
-  id                  Int          @id @default(autoincrement())
-  conversation_id     Int
+  id                  Int       @id @default(autoincrement())
   sender_id           Int
-  receiver_id         Int?
+  receiver_id         Int
   content             String
   message_type        String
   media_url           String?
   is_read             Boolean
-  sent_at             DateTime     @default(now())
+  sent_at             DateTime  @default(now())
   read_at             DateTime?
   deleted_by_sender   Boolean
   deleted_by_receiver Boolean
 
-  conversation Conversation @relation(fields: [conversation_id], references: [id])
-  sender       User         @relation("MessagesSent", fields: [sender_id], references: [id])
-  receiver     User?        @relation("MessagesReceived", fields: [receiver_id], references: [id])
+  sender   User @relation("MessagesSent", fields: [sender_id], references: [id])
+  receiver User @relation("MessagesReceived", fields: [receiver_id], references: [id])
 }
 
 model Notification {
   id         Int       @id @default(autoincrement())
-  user_id    Int
-  sender_id  Int
+  user_id    Int // recipient
+  sender_id  Int // who triggered the action (e.g. requester)
   type       String
   title      String
   body       String
@@ -175,11 +149,10 @@ model Favorite {
   favorited_user User @relation("FavoritesTo", fields: [favorited_user_id], references: [id])
 }
 
-model Contact {
-  id               Int      @id @default(autoincrement())
-  first_name       String
-  last_name        String
-  email        String
-  subject           String
-  description     String
+model NewModel {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }

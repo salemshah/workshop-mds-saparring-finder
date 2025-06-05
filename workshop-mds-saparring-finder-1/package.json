@@ -1,0 +1,29 @@
+{
+  "name": "workshop-mds-saparring-finder",
+  "version": "1.0.0",
+  "description": "A project for managing sparring sessions and user interactions.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate"
+  },
+  "keywords": [
+    "sparring",
+    "management",
+    "prisma",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "prisma": "^3.0.0",
+    "pg": "^8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "ts-node": "^10.0.0"
+  }
+}
